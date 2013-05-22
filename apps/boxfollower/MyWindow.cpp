@@ -5,7 +5,7 @@
 
 using namespace Eigen;
 using namespace dynamics;
-using namespace utils;
+using namespace math;
 using namespace yui;
 
 
