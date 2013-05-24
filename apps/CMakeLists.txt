@@ -6,6 +6,7 @@ set_property(DIRECTORY PROPERTY EXCLUDE_FROM_DEFAULT_BUILD ON)
 foreach(APPDIR
 	meshCollision
 	boxfollower
+	inertiabot3
 	viewer
 	forwardSim
 	cubes

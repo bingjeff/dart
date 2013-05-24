@@ -1,0 +1,41 @@
+dofs{
+    baseTX { 0.0000, -1000, 1000 }
+    baseTY { 0.0000, -1000, 1000 }
+    baseTZ { 0.0000, -1000, 1000 }
+    baseRZ { 1.5700, -3.1416, 3.1416 }
+    leg1RZ { 0.2000, -3.1416, 3.1416 }
+    leg2RZ { -0.2000, -3.1416, 3.1416 }
+    Length { 0.15, 0.0000, 10.0000 }
+}
+
+mass {
+    node_mass { 1.0 }
+}
+
+node base { 0
+            chain { 2
+                    translate { <baseTX,baseTY,baseTZ> }
+                    rotate_euler { baseRZ, z }
+                  }
+            primitive {<0.2,1.0,0.2>, <0.0,0.0,0.0>, Length, CUBE, node_mass}
+
+            node leg1 { 1
+                         chain { 2
+                         telescope { <0.0,-0.5,0.0>, Length }
+                         rotate_euler { leg1RZ, z }
+                         }
+                        primitive {<0.2,1.0,0.2>, <0.0,-0.5,0.0>, Length, CUBE, node_mass}
+                       }
+
+            node leg2 { 1
+                         chain { 2
+                          telescope { <0.0,0.5,0.0>, Length }
+                          rotate_euler { leg2RZ, z }
+                          }
+                         primitive {<0.2,1.0,0.2>, <0.0,0.5,0.0>, Length, CUBE, node_mass}
+                       }
+          }
+
+handles {
+	tip { <0.0,0.0,0.0>, 0, base }
+}
