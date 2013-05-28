@@ -21,6 +21,8 @@ class Controller {
     Eigen::VectorXd getKd() {return mKd; };
 
     void computeTorques(const Eigen::VectorXd& _dof, const Eigen::VectorXd& _dofVel);
+    Eigen::Vector3d evalLinMomentum(const Eigen::VectorXd& _dofVel);
+    Eigen::Vector3d evalAngMomentum(const Eigen::VectorXd& _dofVel);
 
  protected:
     dynamics::SkeletonDynamics *mSkel;

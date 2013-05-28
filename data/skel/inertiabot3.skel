@@ -2,6 +2,8 @@ dofs{
     baseTX { 0.0000, -1000, 1000 }
     baseTY { 0.0000, -1000, 1000 }
     baseTZ { 0.0000, -1000, 1000 }
+    baseRX { 0.0000, -3.1416, 3.1416 }
+    baseRY { 0.0000, -3.1416, 3.1416 }
     baseRZ { 1.5700, -3.1416, 3.1416 }
     leg1RZ { 0.2000, -3.1416, 3.1416 }
     leg2RZ { -0.2000, -3.1416, 3.1416 }
@@ -15,6 +17,8 @@ mass {
 node base { 0
             chain { 2
                     translate { <baseTX,baseTY,baseTZ> }
+                    rotate_euler { baseRX, x }
+                    rotate_euler { baseRY, y }
                     rotate_euler { baseRZ, z }
                   }
             primitive {<0.2,1.0,0.2>, <0.0,0.0,0.0>, Length, CUBE, node_mass}
