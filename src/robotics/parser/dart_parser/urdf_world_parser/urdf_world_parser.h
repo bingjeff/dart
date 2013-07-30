@@ -1,7 +1,7 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
 * 
-*  Copyright (c) 2008, Willow Garage, Inc.
+*  Copyright (c) 2013, Humanoid Robotics Lab.
 *  All rights reserved.
 * 
 *  Redistribution and use in source and binary forms, with or without
@@ -32,53 +32,16 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Author: John Hsu */
+/* Author: A. Huaman */
+/* @date 2013/06/20 */
 
+#pragma once
 
-#include "../urdfdom_headers/urdf_model/twist.h"
-#include <fstream>
-#include <sstream>
-#include <boost/lexical_cast.hpp>
-#include <algorithm>
-#include <tinyxml.h>
+#include <string>
+#include <boost/function.hpp>
+
+#include <urdf_world/world.h>
 
 namespace urdf{
-
-bool parseTwist(Twist &twist, TiXmlElement* xml)
-{
-  twist.clear();
-  if (xml)
-  {
-    const char* linear_char = xml->Attribute("linear");
-    if (linear_char != NULL)
-    {
-      try {
-        twist.linear.init(linear_char);
-      }
-      catch (ParseError &e) {
-        twist.linear.clear();
-        printf("Malformed linear string [%s]: %s \n", linear_char, e.what());
-        return false;
-      }
-    }
-
-    const char* angular_char = xml->Attribute("angular");
-    if (angular_char != NULL)
-    {
-      try {
-        twist.angular.init(angular_char);
-      }
-      catch (ParseError &e) {
-        twist.angular.clear();
-        printf("Malformed angular [%s]: %s \n", angular_char, e.what());
-        return false;
-      }
-    }
-  }
-  return true;
+  boost::shared_ptr<World> parseWorldURDF(const std::string &xml_string, std::string _path );
 }
-
-}
-
-
-

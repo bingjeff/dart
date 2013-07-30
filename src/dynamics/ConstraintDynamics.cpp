@@ -15,7 +15,7 @@
 
 using namespace Eigen;
 using namespace collision;
-using namespace math;
+using namespace dart_math;
 
 #define EPSILON 0.000001
 
@@ -126,11 +126,7 @@ using namespace math;
 
             for (int j = 0; j < nNodes; j++)
                 {
-                    kinematics::BodyNode* node = _newSkel->getNode(j);
-                    // TODO: (test)
-                    if (node->getCollisionShape() == NULL)
-                        continue;
-                    mCollisionChecker->addCollisionSkeletonNode(node);
+                    mCollisionChecker->addCollisionSkeletonNode(_newSkel->getNode(j));
                     mBodyIndexToSkelIndex.push_back(nSkels-1);
                 }
 
@@ -174,6 +170,7 @@ using namespace math;
 
         void ConstraintDynamics::initialize() {
             // Allocate the Collision Detection class
+            //mCollisionChecker = new FCLCollisionDetector();
             mCollisionChecker = new FCLMESHCollisionDetector();
 
             mBodyIndexToSkelIndex.clear();
@@ -423,7 +420,7 @@ using namespace math;
                     continue;
 
                 VectorXd tau = mSkels[i]->getExternalForces() + mSkels[i]->getInternalForces();
-                VectorXd tauStar = (mSkels[i]->getMassMatrix() * mSkels[i]->getPoseVelocity()) - (mDt * (mSkels[i]->getCombinedVector() - tau));
+                VectorXd tauStar = (mSkels[i]->getMassMatrix() * mSkels[i]->get_dq()) - (mDt * (mSkels[i]->getCombinedVector() - tau));
                 mTauStar.block(startRow, 0, tauStar.rows(), 1) = tauStar;
                 startRow += tauStar.rows();
             }
@@ -435,8 +432,8 @@ using namespace math;
             for (int i = 0; i < getNumContacts(); i++) {
                 Contact& c = mCollisionChecker->getContact(i);
                 Vector3d p = c.point;
-                int skelID1 = mBodyIndexToSkelIndex[c.collisionNode1->getBodyNodeID()];
-                int skelID2 = mBodyIndexToSkelIndex[c.collisionNode2->getBodyNodeID()];
+                int skelID1 = mBodyIndexToSkelIndex[c.collisionNode1->getIndex()];
+                int skelID2 = mBodyIndexToSkelIndex[c.collisionNode2->getIndex()];
 
                 Vector3d N21 = c.normal;
                 Vector3d N12 = -c.normal;
@@ -559,7 +556,7 @@ using namespace math;
             for (int i = 0; i < mSkels.size(); i++) {
                 if (mSkels[i]->getImmobileState())
                     continue;
-                VectorXd qDot = mSkels[i]->getPoseVelocity();
+                VectorXd qDot = mSkels[i]->get_dq();
                 mTauHat.noalias() += -(mJ[i] - mPreJ[i]) / mDt * qDot;
                 mTauHat.noalias() -= mJMInv[i] * (mSkels[i]->getInternalForces() + mSkels[i]->getExternalForces() - mSkels[i]->getCombinedVector());
             }

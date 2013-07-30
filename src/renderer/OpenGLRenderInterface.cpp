@@ -54,7 +54,7 @@ static GLUquadricObj *quadObj;
 
 #define QUAD_OBJ_INIT { if(!quadObj) initQuadObj(); }
 
-static void initQuadObj(void)
+static void initQuadObj()
 {
 	quadObj = gluNewQuadric();
 	if(!quadObj)
@@ -387,8 +387,12 @@ namespace renderer {
     }
 
     void OpenGLRenderInterface::drawMesh(const Vector3d& _size, const aiScene *_mesh) {
-    	if(_mesh)
-    		recursiveRender(_mesh, _mesh->mRootNode);
+        if(_mesh) {
+            glPushMatrix();
+            glScaled(_size(0), _size(1), _size(2));
+            recursiveRender(_mesh, _mesh->mRootNode);
+            glPopMatrix();
+        }
     }
 
     void OpenGLRenderInterface::drawList(GLuint index) {
@@ -408,8 +412,10 @@ namespace renderer {
     	if(_node == 0)
     		return;
 
-    	compileList(_node->getVisualizationShape());
-    	compileList(_node->getCollisionShape());
+    	for(int i = 0; i < _node->getNumVisualizationShapes(); i++)
+    		compileList(_node->getVisualizationShape(i));
+    	for(int i = 0; i < _node->getNumCollisionShapes(); i++)
+    		compileList(_node->getCollisionShape(i));
     }
 
     //FIXME: Use polymorphism instead of switch statements
@@ -434,13 +440,13 @@ namespace renderer {
 			if(shapeMesh == 0)
 				return;
 
-			shapeMesh->setDisplayList(compileList(shapeMesh->getMesh()));
+            shapeMesh->setDisplayList(compileList(shapeMesh->getDim(), shapeMesh->getMesh()));
 
     		break;
     	}
     }
 
-    GLuint OpenGLRenderInterface::compileList(const aiScene *_mesh) {
+    GLuint OpenGLRenderInterface::compileList(const Vector3d& _scale, const aiScene *_mesh) {
     	if(!_mesh)
     		return 0;
 
@@ -448,7 +454,7 @@ namespace renderer {
     	GLuint index = glGenLists(1);
     	// Compile list
     	glNewList(index, GL_COMPILE);
-    	drawMesh(Vector3d::Ones(), _mesh);
+    	drawMesh(_scale, _mesh);
     	glEndList();
 
     	return index;
@@ -481,8 +487,14 @@ namespace renderer {
     	glPushMatrix();
     	glMultMatrixd(pose.data());
 
-    	kinematics::Shape *shape = _colMesh ? _node->getCollisionShape() : _node->getVisualizationShape();
-    	draw(shape, _colMesh);
+    	if(_colMesh) {
+    		for(int i = 0; i < _node->getNumCollisionShapes(); i++)
+    			draw(_node->getCollisionShape(i));
+    	}
+    	else {
+    		for(int i = 0; i < _node->getNumVisualizationShapes(); i++)
+    			draw(_node->getVisualizationShape(i));
+    	}
 
     	glColor3f(1.0f,1.0f,1.0f);
 		glEnable( GL_TEXTURE_2D );
@@ -491,7 +503,7 @@ namespace renderer {
     }
 
     //FIXME: Refactor this to use polymorphism.
-    void OpenGLRenderInterface::draw(kinematics::Shape *_shape, bool _colMesh) {
+    void OpenGLRenderInterface::draw(kinematics::Shape *_shape) {
     	if(_shape == 0)
     		return;
 
@@ -532,7 +544,7 @@ namespace renderer {
     		else if(shapeMesh->getDisplayList())
     			drawList(shapeMesh->getDisplayList());
     		else
-    			drawMesh(Vector3d::Ones(), shapeMesh->getMesh());
+                drawMesh(shapeMesh->getDim(), shapeMesh->getMesh());
 
     		break;
     	}

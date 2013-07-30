@@ -71,19 +71,8 @@ void ContactDynamics::initialize() {
         int nNodes = skel->getNumNodes();
 
         for (int j = 0; j < nNodes; j++) {
-            kinematics::BodyNode* node = skel->getNode(j);
-
-            // If the collision shape of the node is NULL, then the node is
-            // uncollidable object. We don't care uncollidable object in
-            // ContactDynamics.
-            if (node->getCollisionShape() == NULL)
-                continue;
-
-            if (node->getCollisionShape()->getShapeType() != kinematics::Shape::P_UNDEFINED)
-            {
-                mCollisionChecker->addCollisionSkeletonNode(node);
-                mBodyIndexToSkelIndex.push_back(i);
-            }
+            mCollisionChecker->addCollisionSkeletonNode(skel->getNode(j));
+            mBodyIndexToSkelIndex.push_back(i);
         }
     }
 
@@ -113,19 +102,8 @@ void ContactDynamics::addSkeleton(SkeletonDynamics* _newSkel) {
     int nNodes = _newSkel->getNumNodes();
 
     for (int j = 0; j < nNodes; j++) {
-        kinematics::BodyNode* node = _newSkel->getNode(j);
-
-        // If the collision shape of the node is NULL, then the node is
-        // uncollidable object. We don't care uncollidable object in
-        // ContactDynamics.
-        if (node->getCollisionShape() == NULL)
-            continue;
-
-        if (node->getCollisionShape()->getShapeType()
-                != kinematics::Shape::P_UNDEFINED) {
-            mCollisionChecker->addCollisionSkeletonNode(node);
-            mBodyIndexToSkelIndex.push_back(nSkels-1);
-        }
+        mCollisionChecker->addCollisionSkeletonNode(_newSkel->getNode(j));
+        mBodyIndexToSkelIndex.push_back(nSkels-1);
     }
 
     Eigen::VectorXd newConstrForce;
@@ -165,7 +143,7 @@ void ContactDynamics::updateTauStar() {
             continue;
 
         VectorXd tau = mSkels[i]->getExternalForces() + mSkels[i]->getInternalForces();
-        VectorXd tauStar = mSkels[i]->getMassMatrix() * mSkels[i]->getPoseVelocity();
+        VectorXd tauStar = mSkels[i]->getMassMatrix() * mSkels[i]->get_dq();
         tauStar.noalias() -= (mDt * (mSkels[i]->getCombinedVector() - tau));
         mTauStar.segment(startRow, tauStar.rows()) = tauStar;
         startRow += tauStar.rows();
@@ -284,11 +262,11 @@ void ContactDynamics::applySolution() {
 MatrixXd ContactDynamics::getJacobian(kinematics::BodyNode* node, const Vector3d& p) {
     int nDofs = node->getSkel()->getNumDofs();
     MatrixXd Jt( MatrixXd::Zero(nDofs, 3) );
-    Vector3d invP = math::xformHom(node->getWorldInvTransform(), p);
+    Vector3d invP = dart_math::xformHom(node->getWorldInvTransform(), p);
 
     for(int dofIndex = 0; dofIndex < node->getNumDependentDofs(); dofIndex++) {
         int i = node->getDependentDof(dofIndex);
-        Jt.row(i) = math::xformHom(node->getDerivWorldTransform(dofIndex), invP);
+        Jt.row(i) = dart_math::xformHom(node->getDerivWorldTransform(dofIndex), invP);
     }
 
     return Jt;
@@ -300,8 +278,8 @@ void ContactDynamics::updateNBMatrices() {
     for (int i = 0; i < getNumContacts(); i++) {
         Contact& c = mCollisionChecker->getContact(i);
         Vector3d p = c.point;
-        int skelID1 = mBodyIndexToSkelIndex[c.collisionNode1->getBodyNodeID()];
-        int skelID2 = mBodyIndexToSkelIndex[c.collisionNode2->getBodyNodeID()];
+        int skelID1 = mBodyIndexToSkelIndex[c.collisionNode1->getIndex()];
+        int skelID2 = mBodyIndexToSkelIndex[c.collisionNode2->getIndex()];
 
         Vector3d N21 = c.normal;
         Vector3d N12 = -c.normal;

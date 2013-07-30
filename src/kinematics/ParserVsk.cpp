@@ -517,7 +517,7 @@ bool readSegment(tinyxml2::XMLElement*_segment,
     // if(!foundJoint) cout<<"fixed joint!\n";
 
     for(int i=0; i<jt->getNumTransforms(); i++){
-        if(!jt->getTransform(i)->getVariable()) continue;
+        if(!jt->getTransform(i)->isVariable()) continue;
         for(int j=0; j<jt->getTransform(i)->getNumDofs(); j++){
             // cout<<jt->getTransform(i)->getDof(j)->getName()<<" ";
         }
@@ -739,8 +739,8 @@ bool readMarker(tinyxml2::XMLElement*_marker, map<string, double>& _paramsList, 
 
         // create new  position
         Vector3d negExpShoulder = -expShoulder;
-        Quaterniond qr = math::expToQuat(negExpShoulder);	// negative for the markers
-        math::rotatePoint(qr, lpos2);
+        Quaterniond qr = dart_math::expToQuat(negExpShoulder);	// negative for the markers
+        dart_math::rotatePoint(qr, lpos2);
     }
 
     Marker* m = new Marker(mname.c_str(), lpos2, _skel->getNode(_segmentindex[sname]));
@@ -849,8 +849,8 @@ bool readShape(tinyxml2::XMLElement* _prim, map<string, double>& _paramsList, ma
     	prim->setOffset(off);
     }
 
-    blink->setVisualizationShape(prim);
-    blink->setCollisionShape(prim);
+    blink->addVisualizationShape(prim);
+    blink->addCollisionShape(prim);
     blink->setMass(mass);
     blink->setLocalCOM( off );
     return true;
@@ -880,13 +880,13 @@ VectorXd getDofVectorXd(Transformation* tr) {
 void autoGenerateShape(Skeleton* skel) {
     for(int i=0; i<skel->getNumNodes(); i++){
 
-        if(skel->getNode(i)->getShape())
+        if(skel->getNode(i)->getNumShapes() > 0)
             continue;
 
         ShapeEllipsoid *pm = new ShapeEllipsoid(0.05 * Vector3d(1.0,1.0,1.0));
         pm->setColor(Vector3d(0.5, 0.5, 1.0));
         BodyNode* node = skel->getNode(i);
-        node->setShape(pm);
+        node->addShape(pm);
         node->setMass(1.0);
         Vector3d vecZero(0,0,0);
         node->setLocalCOM(vecZero);
@@ -905,7 +905,7 @@ void autoGenerateShapeParent(Skeleton* skel)
         BodyNode* node = skel->getNode(i);
         Joint* joint = node->getParentJoint();
 
-        if(node->getShape())
+        if(node->getNumShapes() > 0)
             continue;
 
         // Search translate matrix
@@ -966,8 +966,8 @@ void autoGenerateShapeParent(Skeleton* skel)
 
         BodyNode* target = parent;
         target->setLocalCOM(offset);
-        target->setVisualizationShape(pm);
-        target->setCollisionShape(pm);
+        target->addVisualizationShape(pm);
+        target->addCollisionShape(pm);
         target->setMass(mass);
     }
 
