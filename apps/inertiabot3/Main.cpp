@@ -1,8 +1,9 @@
 #include "dynamics/SkeletonDynamics.h"
-#include "kinematics/FileInfoSkel.hpp"
 #include "utils/Paths.h"
 #include "math/UtilsMath.h"
 #include "simulation/World.h"
+#include "robotics/parser/dart_parser/DartLoader.h"
+#include <iostream>
 
 #include "MyWindow.h"
 #include "Controller.h"
@@ -14,28 +15,32 @@ using namespace math;
 
 int main(int argc, char* argv[])
 {
-    // load a skeleton file
-    FileInfoSkel<SkeletonDynamics> model;
-    //model.loadFile(DART_DATA_PATH"/skel/nunchuck.skel", SKEL);
-    model.loadFile(DART_DATA_PATH"/skel/inertiabot3.skel", SKEL);
+    // load a URDF
+    DartLoader dl;
+    SkeletonDynamics* skelRobot;
+//     std::string urdfFileName(DART_DATA_PATH"urdf/inertiabot3.urdf");
+//     std::string urdfFileName(DART_DATA_PATH"urdf/shadow_hand.urdf");
+    std::string urdfFileName("/Users/bingjeff/Documents/Research/2013_DART/dart/data/urdf/shadow_hand.urdf");
+    std::cout<< urdfFileName << endl;
+    skelRobot = dl.parseSkeleton(urdfFileName);
     
     // create and initialize the world
-    World *myWorld = new World();
+    World *worldRobot = new World();
     //Vector3d gravity(0.0, -9.81, 0.0);
     Vector3d gravity(0.0, 0.0, 0.0);
-    myWorld->setGravity(gravity);
+    worldRobot->setGravity(gravity);
 
-    myWorld->addSkeleton((SkeletonDynamics*)model.getSkel());
+    worldRobot->addSkeleton(skelRobot);
 
-    myWorld->setTimeStep(1.0/2000);
+    worldRobot->setTimeStep(1.0/2000);
 
     // create a window and link it to the world
     MyWindow window;
-    window.setWorld(myWorld);
+    window.setWorld(worldRobot);
 
     // create controller
-    Controller *myController = new Controller(myWorld->getSkeleton(0));
-    window.setController(myController);
+    Controller *ctrlRobot = new Controller(worldRobot->getSkeleton(0));
+    window.setController(ctrlRobot);
   
     glutInit(&argc, argv);
     window.initWindow(640, 480, "Forward Simulation");
