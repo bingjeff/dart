@@ -5,7 +5,7 @@
 
 using namespace Eigen;
 using namespace dynamics;
-using namespace math;
+using namespace dart_math;
 using namespace yui;
 
 

@@ -11,17 +11,15 @@
 using namespace kinematics;
 using namespace dynamics;
 using namespace simulation;
-using namespace math;
+using namespace dart_math;
 
 int main(int argc, char* argv[])
 {
     // load a URDF
     DartLoader dl;
     SkeletonDynamics* skelRobot;
-//     std::string urdfFileName(DART_DATA_PATH"urdf/inertiabot3.urdf");
+    std::string urdfFileName(DART_DATA_PATH"urdf/inertiabot3.urdf");
 //     std::string urdfFileName(DART_DATA_PATH"urdf/shadow_hand.urdf");
-    std::string urdfFileName("/Users/bingjeff/Documents/Research/2013_DART/dart/data/urdf/shadow_hand.urdf");
-    std::cout<< urdfFileName << endl;
     skelRobot = dl.parseSkeleton(urdfFileName);
     
     // create and initialize the world

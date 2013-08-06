@@ -10,7 +10,7 @@
 using namespace kinematics;
 using namespace dynamics;
 using namespace simulation;
-using namespace math;
+using namespace dart_math;
 
 int main(int argc, char* argv[])
 {

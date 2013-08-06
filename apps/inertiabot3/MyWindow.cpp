@@ -6,25 +6,25 @@
 
 using namespace Eigen;
 using namespace dynamics;
-using namespace math;
+using namespace dart_math;
 using namespace yui;
 
 
 void MyWindow::timeStepping()
 {
-    typedef Spline<double,1> Spline2d;
-
-    const double pi = std::acos(-1.0);
-    const VectorXd xvals = (VectorXd(5) << 0.0,0.1,0.2,0.3,0.4).finished();
-    const VectorXd yvals = (VectorXd(5) << -1.0*pi,0.5*pi,0.0,0.5*pi,1.0*pi).finished();
-    const Spline2d spline = SplineFitting<Spline2d>::Interpolate(yvals.transpose(), 3, xvals.transpose());
-
-
-    double t = mWorld->getTime();
-    if (t < 0.4)
-    {
-        std::cout << t << " " << spline(t) << std::endl; 
-    }
+//     typedef Spline<double,1> Spline2d;
+// 
+//     const double pi = std::acos(-1.0);
+//     const VectorXd xvals = (VectorXd(5) << 0.0,0.1,0.2,0.3,0.4).finished();
+//     const VectorXd yvals = (VectorXd(5) << -1.0*pi,0.5*pi,0.0,0.5*pi,1.0*pi).finished();
+//     const Spline2d spline = SplineFitting<Spline2d>::Interpolate(yvals.transpose(), 3, xvals.transpose());
+// 
+// 
+//     double t = mWorld->getTime();
+//     if (t < 0.4)
+//     {
+//         std::cout << t << " " << spline(t) << std::endl; 
+//     }
     // add damping
     VectorXd damping = computeDamping();
     // add control force

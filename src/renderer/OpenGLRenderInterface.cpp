@@ -343,7 +343,7 @@ namespace renderer {
         for (; n < nd->mNumMeshes; ++n) {
             const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
 
-            applyMaterial(sc->mMaterials[mesh->mMaterialIndex]);
+            //applyMaterial(sc->mMaterials[mesh->mMaterialIndex]); //Commented out per Yunfei's suggestion. Causes rendering of backfaces only with URDF.
 
             if(mesh->mNormals == NULL) {
                 glDisable(GL_LIGHTING);

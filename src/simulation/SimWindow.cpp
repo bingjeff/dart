@@ -78,7 +78,7 @@ namespace simulation
     void SimWindow::draw()
     {
         glDisable(GL_LIGHTING);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         if (!mSimulating) {
             if (mPlayFrame < mBakedStates.size()) {
                 int nSkels = mWorld->getNumSkeletons();
