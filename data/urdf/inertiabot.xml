@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<RobotProgram>
+  <command name="RotateRightPrimitive">
+    <servo name="A">
+      <time>0.0 0.2 0.4</time>
+      <position>0 90 0</position>
+    </servo>
+    <servo name="B">
+      <time>0.0 0.2 0.4</time>
+      <position>0 90 90</position>
+    </servo>
+  </command>
+  <script name="RotateRight">
+    <run repeat="10">RotateRightPrimitive</run>
+  </script>
+</RobotProgram>

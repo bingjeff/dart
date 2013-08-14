@@ -4,6 +4,7 @@
             <origin rpy="0 0 0" xyz="0.0 0.0 0.034035"/>
             <mass value="0.2102"/>
             <inertia ixx="7.89356e-005" ixy="-2.58573e-009" ixz="7.32601e-008" iyy="0.000214169" iyz="-2.34865e-008" izz="0.000149969"/>
+            <!--inertia ixx="1.0e-004" ixy="0.0" ixz="0.0" iyy="2.0e-004" iyz="0.0" izz="1.0e-004"/-->
         </inertial>
         <visual>
             <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
@@ -14,9 +15,9 @@
             <material name="Blue"/>
         </visual>
         <collision>
-            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.035"/>
             <geometry name="body_collision">
-                <box size="0.130 0.030 0.070"/>
+                <box size="0.085 0.030 0.070"/>
             </geometry>
         </collision>
     </link>
@@ -35,16 +36,16 @@
             <material name="Grey"/>
         </visual>
         <collision>
-            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <origin rpy="0 0 0" xyz="-0.111 0.000 0.035"/>
             <geometry name="leg_A_collision">
-                <box size="0.100 0.030 0.070"/>
+                <box size="0.085 0.030 0.070"/>
             </geometry>
         </collision>
     </link>
     <link name="leg_B">
         <inertial>
             <origin rpy="0 0 0" xyz="0.054388 0.0 0.0342105"/>
-            <mass value="1.0"/>
+            <mass value="0.1202"/>
             <inertia ixx="4.41383e-005" ixy="1.2767e-008" ixz="9.93802e-007" iyy="0.00012073" iyz="2.0215e-008" izz="8.95086e-005"/>
         </inertial>
         <visual>
@@ -56,9 +57,9 @@
             <material name="Grey"/>
         </visual>
         <collision>
-            <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+            <origin rpy="0 0 0" xyz="0.111 0.000 0.035"/>
             <geometry name="leg_B_collision">
-                <box size="0.100 0.030 0.070"/>
+                <box size="0.085 0.030 0.070"/>
             </geometry>
         </collision>
     </link>

@@ -18,8 +18,8 @@ Controller::Controller(dynamics::SkeletonDynamics *_skel)
     mKd.resize(nDof);
     for (int i = 0; i < nDof; i++){
         mDesiredDofs[i] = 0.0;
-        mKp[i] = 1.0;
-        mKd[i] = 0.5;
+        mKp[i] = 0.1;
+        mKd[i] = 0.025;
     }
 }
 
@@ -28,8 +28,8 @@ void Controller::computeTorques(const VectorXd& _dof, const VectorXd& _dofVel)
     // Solve for the appropriate joint torques
     mTorques[6] = -mKp[0]*(_dof[6]-mDesiredDofs[0]) - mKd[0]*_dofVel[6];
     mTorques[7] = -mKp[1]*(_dof[7]-mDesiredDofs[1]) - mKd[1]*_dofVel[7];
-    std::cout << _dof.transpose() << mDesiredDofs.transpose() << std::endl;
-    std::cout << mTorques.transpose() << std::endl;
+    //std::cout << _dof.transpose() << mDesiredDofs.transpose() << std::endl;
+    //std::cout << mTorques.transpose() << std::endl;
 }
 
 /*
