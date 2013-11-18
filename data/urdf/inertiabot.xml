@@ -2,15 +2,15 @@
 <RobotProgram>
   <command name="RotateRightPrimitive">
     <servo name="A">
-      <time>0.0 0.2 0.4</time>
-      <position>0 90 0</position>
+      <time>0.6 0.4 0.3</time>
+      <position>-90 0 0</position>
     </servo>
     <servo name="B">
-      <time>0.0 0.2 0.4</time>
-      <position>0 90 90</position>
+      <time>0.6 0.4 0.3</time>
+      <position>90 90 0</position>
     </servo>
   </command>
   <script name="RotateRight">
-    <run repeat="10">RotateRightPrimitive</run>
+    <run repeat="5">RotateRightPrimitive</run>
   </script>
 </RobotProgram>

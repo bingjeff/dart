@@ -3,9 +3,7 @@
 #include "kinematics/Shape.h"
 #include "utils/Paths.h"
 #include "dynamics/BodyNodeDynamics.h"
-#include "renderer/OpenGLRenderInterface.h"
 #include "yui/GLFuncs.h"
-#include <unsupported/Eigen/Splines>
 #include <Eigen/Core>
 
 using namespace Eigen;
@@ -13,47 +11,35 @@ using namespace dynamics;
 using namespace renderer;
 using namespace dart_math;
 using namespace yui;
-using namespace tinyxml2;
 
 
 void MyWindow::timeStepping()
 {
-    typedef Spline<double,1> Spline2d;
-
-    const double pi = std::acos(-1.0);
-    const VectorXd xvals = (VectorXd(6) <<  0.0, 0.2, 0.4, 0.6, 0.8, 0.8).finished();
-    //const VectorXd yvals = (VectorXd(6) << -0.5*pi,0.25*pi,0.0,0.25*pi,0.5*pi,0.5*pi).finished();
-    const VectorXd yvals = (VectorXd(6) << -1.0, 0.5, 0.0, 0.5, 1.0, 1.0).finished();
-    //const Spline2d splA = SplineFitting<Spline2d>::Interpolate(mCmdServoA.col(1).transpose(), 3, mCmdServoA.col(0).transpose());
-    //const Spline2d splB = SplineFitting<Spline2d>::Interpolate(mCmdServoB.col(1).transpose(), 3, mCmdServoB.col(0).transpose());
-    const Spline2d splA = SplineFitting<Spline2d>::Interpolate(yvals.transpose(), 3, xvals.transpose());
-
-    double t = mWorld->getTime();
-    mWorld->step();
-    mController->setDesiredDof(0, splA(t)[0]);
-    if (t < 0.8)
+    // Update the desired control based on a stored policy
+//    mController->updateControlPolicy( mWorld->getTime() );
+    if( mWorld->getTime() > mCurTime + mLearner->getStepTime() )
     {
-      if ( abs(t  - floor(t / 0.01) * 0.01) < 1.e-3 )
-      {
-        std::cout << t << " "<< splA(t) << endl;
-                  //<< " " << splB(t) << std::endl; 
-      }
+        VectorXd action = mLearner->policy(mWorld->getState());
+        cout << "T: " << mWorld->getTime();
+        for(int c=0; c<mNumServos; ++c)
+        {
+            cout <<" [" << c << "]: " << action[c];
+            mController->setDesiredDof(c, action[c]);
+        }
+        cout << endl;
+        this->latchTime();
     }
-    else
-    {
-        mSimulating = false;
-    }
+
 //*
-    // add damping
-    VectorXd damping = computeDamping();
     // add control force
-    mController->computeTorques(mWorld->getSkeleton(0)->getPose(), mWorld->getSkeleton(0)->getPoseVelocity());
+    mController->computeTorques();
     mWorld->getSkeleton(0)->setInternalForces( mController->getTorques() );
     // simulate one step
     mWorld->step();
 //*/
 }
 
+// Code not currently utilized
 VectorXd MyWindow::computeDamping()
 {
     int nDof = mWorld->getSkeleton(0)->getNumDofs();
@@ -125,6 +111,7 @@ void MyWindow::drawSkels()
 void MyWindow::keyboard(unsigned char key, int x, int y)
 {
     const double pi = std::acos(-1.0);
+    VectorXd st;
     switch(key){
     case ' ': // use space key to play or stop the motion
         mSimulating = !mSimulating;
@@ -140,7 +127,16 @@ void MyWindow::keyboard(unsigned char key, int x, int y)
         mVisibleInertiaEllipsoid = !mVisibleInertiaEllipsoid;
         break;
     case 'l': // use l key to load a script
-        loadXmlScript(DART_DATA_PATH"urdf/inertiabot.xml");
+        mController->setReferenceTime( mWorld->getTime() );
+        mController->scriptLoadXML(DART_DATA_PATH"urdf/inertiabot.xml");
+        break;
+    case 'r': // use r key to reset simulation
+        mWorld->reset();
+        mWorld->step();
+        this->latchTime();
+        break;
+    case '?': // use ? key to run an episode of learning
+        mLearner->learnepisode();
         break;
     case 'i': // use i-key to print out debug information
         for(int c = 0; c < mWorld->getNumSkeletons(); ++c)
@@ -178,6 +174,12 @@ void MyWindow::keyboard(unsigned char key, int x, int y)
             glutPostRedisplay();
         }
         break;
+    case '0': // rotate center link
+        st = mWorld->getState();
+        st[3] += 0.05;
+        st[11] += 0.05;
+        mWorld->setState(st);
+        break;
     case '1': // linkage extended
         mController->setDesiredDof(0, 0.0);
         mController->setDesiredDof(1, 0.0);
@@ -204,137 +206,3 @@ void MyWindow::keyboard(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
-void MyWindow::loadXmlScript(const char* _xmlFileName)
-{
-    XMLDocument xmldoc;
-    XMLElement* rootElem = NULL;
-    XMLElement* scriptElem = NULL;
-    XMLElement* curElem = NULL;
-    int numRepeats = 0;
-
-    // Clear out the previous commands and seed with current time
-    for(int c=0; c<2; ++c)
-    {
-        mCommands[2*c].clear();
-        mCommands[2*c].push_back( mWorld->getTime() );
-        mCommands[2*c+1].clear();
-        mCommands[2*c+1].push_back( 0.0 );
-    }
-    xmldoc.LoadFile(_xmlFileName);
-    rootElem = xmldoc.FirstChildElement("RobotProgram");
-    if( rootElem )
-    {
-        scriptElem = rootElem->FirstChildElement("script");
-        if( scriptElem )
-        {
-            curElem = scriptElem->FirstChildElement("run");
-            while( curElem )
-            {
-                // Find out if the command is repeated
-                const char* strAttribute = curElem->Attribute("repeat");
-                numRepeats = strAttribute ? atoi(strAttribute) : 0;
-                // Search for command to add
-                const char* strCmdName = curElem->GetText();
-                if( strCmdName && numRepeats > 0 )
-                {
-                    for(int c=0; c < numRepeats; ++c)
-                    {
-                      loadXmlCommand(rootElem, strCmdName, mCommands);
-                    }
-                    while(mCommands[0].size() > 0)
-                    {
-                        for(int c=0; c < 4; ++c)
-                        {
-                            if( mCommands[c].size() > 0 )
-                            {
-                              cout<<mCommands[c].front()<<" ";
-                              mCommands[c].pop_front();
-                            }
-                            else
-                            {
-                              cout<<"- ";
-                            }
-                        }
-                        cout<<endl;
-                    }
-                    //TODO: write script parsing
-                }
-                curElem = curElem->NextSiblingElement("run");
-            }
-        }
-    }
-}
-
-void MyWindow::loadXmlCommand(tinyxml2::XMLElement* _rootElem, const char* _strCmdName, list<double> (& _cmd)[4])
-{
-    XMLElement* cmdElem = NULL;
-    XMLElement* servoElem = NULL;
-    XMLElement* curElem = NULL;
-    list<double> lstTime, lstPosition;
-    int numServo = -1;
-    double tlast = 0;
-    double degtorad = asin(1.0) / 90.0;
-
-    cmdElem = _rootElem->FirstChildElement("command");
-    while( cmdElem )
-    {
-        if( cmdElem->Attribute("name", _strCmdName) )
-        {
-            servoElem = cmdElem->FirstChildElement("servo");
-            while( servoElem )
-            {
-                numServo = -1;
-                if( servoElem->Attribute("name", "A") )
-                    numServo = 0;
-                else if( servoElem->Attribute("name", "B") )
-                    numServo = 1;
-                if( numServo >= 0 )
-                {
-                    curElem = servoElem->FirstChildElement("time");
-                    lstTime = parseTextVector( curElem->GetText() );
-                    curElem = servoElem->FirstChildElement("position");
-                    lstPosition = parseTextVector( curElem->GetText() );
-                    if( lstTime.size() == lstPosition.size() )
-                    {
-                        // If there is already a time vector started we will add previous time
-                        tlast = _cmd[2*numServo].size()>0 ? _cmd[2*numServo].back() : 0;
-                        for(list<double>::iterator i=lstTime.begin(); i!=lstTime.end(); i++)
-                        {
-                            _cmd[2*numServo].push_back( *i + tlast );
-                        }
-                        // Add the points to the command
-                        for(list<double>::iterator i=lstPosition.begin(); i!=lstPosition.end(); i++)
-                        {
-                            _cmd[2*numServo+1].push_back( (*i) * degtorad );
-                        }
-                    }
-                    else
-                    {
-                        cout << "ERROR: Command[" << _strCmdName << "] Servo["
-                             << numServo << "]time and position vectors are different length." << endl;
-                    }
-                }
-                servoElem = servoElem->NextSiblingElement("servo");
-            }
-        }
-        cmdElem = curElem->NextSiblingElement("command");
-    }
-}
-
-
-list<double> MyWindow::parseTextVector(const char* _txtVector)
-{
-    list<double> lstVector;
-    char* strVal;
-    strVal = new char[ strlen( _txtVector ) ];
-    strcpy( strVal, _txtVector );
-    if( strlen(strVal) > 0 )
-    {
-        while( strlen(strVal) > 0 )
-        {
-            lstVector.push_back( strtod( strVal, &strVal ) );
-        }
-    }
-
-    return lstVector;
-}

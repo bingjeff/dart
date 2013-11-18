@@ -4,9 +4,8 @@
 #include "yui/Win3D.h"
 #include "simulation/SimWindow.h"
 #include "Controller.h"
-#include <tinyxml2.h>
+#include "qlearning.h"
 #include <Eigen/Core>
-#include <list>
 
 class MyWindow : public simulation::SimWindow
 {
@@ -24,14 +23,15 @@ class MyWindow : public simulation::SimWindow
     virtual void keyboard(unsigned char key, int x, int y);
 
     inline void setController(Controller* _controller) { mController = _controller; }
+    inline void setLearner(Qlearning* _learner) { mLearner = _learner; }
+    inline void latchTime() { mCurTime = mWorld->getTime(); }
 
  private:
-    void loadXmlScript(const char* _xmlFileName);
-    void loadXmlCommand(tinyxml2::XMLElement* _rootElem, const char* _strCmdName, std::list<double> (& _vecCmd)[4]);
-    std::list<double> parseTextVector(const char* _txtVector);
+    double mCurTime;
     Eigen::VectorXd computeDamping();
-    std::list<double> mCommands[4];
+    static const int mNumServos = 2;
     Controller *mController;
+    Qlearning *mLearner;
     bool mVisibleCollisionShape;
     bool mVisibleInertiaEllipsoid;
 };

@@ -70,7 +70,7 @@ public:
     /// @brief Destructor.
     virtual ~World();
 
-    /// @breif Reset the world.
+    /// @brief Reset the world.
     ///
     /// Set Dofs and DofVels as zero (or initial value) and update all
     /// transformations and velocities of each links.

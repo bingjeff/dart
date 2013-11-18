@@ -5,6 +5,7 @@ set_property(DIRECTORY PROPERTY FOLDER Apps)
 foreach(APPDIR
 	meshCollision
 	boxfollower
+        darci
 	inertiabot3
 	viewer
 	forwardSim
